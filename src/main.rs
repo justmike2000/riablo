@@ -10,7 +10,8 @@ use ggez::graphics::{GlBackendSpec, Image, draw,
 use std::path;
 use std::env;
 
-const RESOLUTION: (f32, f32) = (800.0, 600.0);
+const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
+const RESOLUTION: (f32, f32) = (1920.0, 1080.0);
 
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -62,9 +63,12 @@ impl Player {
 
         let param = graphics::DrawParam::new()
         .src(graphics::Rect {x: 0.00, y: 0.00, w: 0.25, h: 0.25})
-        .dest(Vec2::new(20.00, 20.0));
-        //.offset(Vec2::new(0.15, self.jump_offset))
-        //.scale(Vec2::new(0.1, 0.1));
+        .dest(Vec2::new(RESOLUTION.0 / 2.00, 
+                              RESOLUTION.1 / 2.00))
+        .offset(Vec2::new(0.60, 0.50))
+        // Scale image based on resolution
+        .scale(Vec2::new(RESOLUTION.0 / BASE_RESOLUTION.0,
+                                RESOLUTION.1 / BASE_RESOLUTION.1));
         draw(ctx, &self.texture, param)?;
         Ok(())
     }
