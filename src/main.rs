@@ -3,6 +3,7 @@ use oorandom::Rand32;
 
 use glam::*;
 use ggez::{event, timer, Context, GameResult, graphics};
+use ggez::input::mouse::MouseButton;
 use ggez::event::{KeyCode, KeyMods};
 use ggez::graphics::{GlBackendSpec, Image, draw,
                      ImageGeneric, clear, present};
@@ -98,6 +99,18 @@ impl event::EventHandler<ggez::GameError> for GameState {
         present(ctx)?;
         ggez::timer::yield_now();
         Ok(())
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        let scaled_x = (BASE_RESOLUTION.0 / RESOLUTION.0) * x;
+        let scaled_x = (BASE_RESOLUTION.1 / RESOLUTION.1) * y;
+        println!("{}, {}", scaled_x, y);
     }
 
     fn key_down_event(
