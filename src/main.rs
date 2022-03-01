@@ -11,9 +11,13 @@ use ggez::graphics::{GlBackendSpec, Image, draw,
 use std::path;
 use std::env;
 
-const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
 const RESOLUTION: (f32, f32) = (1920.0, 1080.0);
 
+const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
+const STRETCHED_RESOLUTION: (f32, f32) = ((BASE_RESOLUTION.0 / RESOLUTION.0),
+                                       (BASE_RESOLUTION.1 / RESOLUTION.1));
+const SCALED_RESOLUTION: (f32, f32) = ((RESOLUTION.0 / BASE_RESOLUTION.0),
+                                       (RESOLUTION.1 / BASE_RESOLUTION.1));
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Direction {
@@ -108,9 +112,9 @@ impl event::EventHandler<ggez::GameError> for GameState {
         x: f32,
         y: f32,
     ) {
-        let scaled_x = (BASE_RESOLUTION.0 / RESOLUTION.0) * x;
-        let scaled_x = (BASE_RESOLUTION.1 / RESOLUTION.1) * y;
-        println!("{}, {}", scaled_x, y);
+        let stretched_x = STRETCHED_RESOLUTION.0 * x;
+        let stretched_y = STRETCHED_RESOLUTION.0 * y;
+        println!("{}, {}", stretched_x, stretched_y);
     }
 
     fn key_down_event(
