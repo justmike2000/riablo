@@ -1,9 +1,9 @@
 
-use oorandom::Rand32;
+//use oorandom::Rand32;
 
 use glam::*;
-use ggez::{event, timer, Context, GameResult, graphics};
-use ggez::input::mouse::MouseButton;
+use ggez::{event, Context, GameResult, graphics};
+//use ggez::input::mouse::MouseButton;
 use ggez::event::{KeyCode, KeyMods};
 use ggez::graphics::{GlBackendSpec, Image, draw,
                      ImageGeneric, clear, present};
@@ -22,10 +22,10 @@ const PLAYER_MOVEMENT: (f32, f32) = (5.00, 5.00);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 struct Direction {
-    Up: bool,
-    Down: bool,
-    Left: bool,
-    Right: bool,
+    up: bool,
+    down: bool,
+    left: bool,
+    right: bool,
 }
 
 #[derive(Default)]
@@ -38,10 +38,10 @@ impl Direction {
 
     pub fn update_from_keycode(&mut self, key: KeyCode, down: bool) {
         match key {
-            KeyCode::Up => self.Up = down,
-            KeyCode::Down => self.Down = down,
-            KeyCode::Left => self.Left = down,
-            KeyCode::Right => self.Right = down,
+            KeyCode::Up => self.up = down,
+            KeyCode::Down => self.down = down,
+            KeyCode::Left => self.left = down,
+            KeyCode::Right => self.right = down,
             _ => (),
         };
     }
@@ -65,19 +65,19 @@ impl Player {
     }
 
     fn update(&mut self) {
-        if self.direction.Up {
+        if self.direction.up {
             self.position.y -= PLAYER_MOVEMENT.1;
 
         }
-        if self.direction.Down {
+        if self.direction.down {
             self.position.y += PLAYER_MOVEMENT.1;
 
         }
-        if self.direction.Left {
+        if self.direction.left {
             self.position.x -= PLAYER_MOVEMENT.0;
 
         }
-        if self.direction.Right {
+        if self.direction.right {
             self.position.x += PLAYER_MOVEMENT.0;
         }
     }
@@ -111,7 +111,7 @@ impl GameState {
 }
 
 impl event::EventHandler<ggez::GameError> for GameState {
-    fn update(&mut self, ctx: &mut Context) -> GameResult {
+    fn update(&mut self, _ctx: &mut Context) -> GameResult {
         self.player.update();
         Ok(())
     }
@@ -124,14 +124,14 @@ impl event::EventHandler<ggez::GameError> for GameState {
         Ok(())
     }
 
-    fn mouse_button_down_event(
-        &mut self,
-        _ctx: &mut Context,
-        button: MouseButton,
-        x: f32,
-        y: f32,
-    ) {
-    }
+    //fn mouse_button_down_event(
+    //    &mut self,
+    //    _ctx: &mut Context,
+    //    button: MouseButton,
+    //    x: f32,
+    //    y: f32,
+    //) {
+    //}
 
     fn key_down_event(
         &mut self,
