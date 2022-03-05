@@ -14,41 +14,42 @@ use std::env;
 const RESOLUTION: (f32, f32) = (1920.0, 1080.0);
 
 const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
-const STRETCHED_RESOLUTION: (f32, f32) = ((BASE_RESOLUTION.0 / RESOLUTION.0),
-                                       (BASE_RESOLUTION.1 / RESOLUTION.1));
+//const STRETCHED_RESOLUTION: (f32, f32) = ((BASE_RESOLUTION.0 / RESOLUTION.0),
+//                                       (BASE_RESOLUTION.1 / RESOLUTION.1));
 const SCALED_RESOLUTION: (f32, f32) = ((RESOLUTION.0 / BASE_RESOLUTION.0),
                                        (RESOLUTION.1 / BASE_RESOLUTION.1));
+const PLAYER_MOVEMENT: (f32, f32) = (5.00, 5.00);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+struct Direction {
+    Up: bool,
+    Down: bool,
+    Left: bool,
+    Right: bool,
+}
+
+#[derive(Default)]
+struct Position {
+    x: f32,
+    y: f32,
 }
 
 impl Direction {
-    pub fn inverse(&self) -> Self {
-        match *self {
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-        }
-    }
 
-    pub fn from_keycode(key: KeyCode) -> Option<Direction> {
+    pub fn update_from_keycode(&mut self, key: KeyCode) {
         match key {
-            KeyCode::Up => Some(Direction::Up),
-            KeyCode::Down => Some(Direction::Down),
-            KeyCode::Left => Some(Direction::Left),
-            KeyCode::Right => Some(Direction::Right),
-            _ => None,
-        }
+            KeyCode::Up => self.Up = true,
+            KeyCode::Down => self.Down = true,
+            KeyCode::Left => self.Left = true,
+            KeyCode::Right => self.Right = true,
+            _ => (),
+        };
     }
 }
 
 struct Player {
+    position: Position,
+    direction: Direction,
     texture: ImageGeneric<GlBackendSpec>,
 }
 
@@ -56,21 +57,38 @@ impl Player {
 
     fn new(ctx: &mut Context) -> Player {
         Player {
+            position: Position::default(),
+            direction: Direction::default(),
             texture: Image::new(ctx, 
                 "/hero.png".to_string()).unwrap(),
         }
     }
 
     fn update(&mut self) {
+        if self.direction.Up {
+            self.position.y -= PLAYER_MOVEMENT.1;
+
+        }
+        if self.direction.Down {
+            self.position.y += PLAYER_MOVEMENT.1;
+
+        }
+        if self.direction.Left {
+            self.position.x -= PLAYER_MOVEMENT.0;
+
+        }
+        if self.direction.Right {
+            self.position.x += PLAYER_MOVEMENT.0;
+        }
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
 
         let param = graphics::DrawParam::new()
         .src(graphics::Rect {x: 0.00, y: 0.00, w: 0.25, h: 0.25})
-        .dest(Vec2::new(RESOLUTION.0 / 2.00, 
-                              RESOLUTION.1 / 2.00))
-        .offset(Vec2::new(0.60, 0.50))
+        .dest(Vec2::new(self.position.x * SCALED_RESOLUTION.0, 
+                              self.position.y * SCALED_RESOLUTION.1))
+        .offset(Vec2::new(0.00, 0.00))
         // Scale image based on resolution
         .scale(Vec2::new(RESOLUTION.0 / BASE_RESOLUTION.0,
                                 RESOLUTION.1 / BASE_RESOLUTION.1));
@@ -94,6 +112,7 @@ impl GameState {
 
 impl event::EventHandler<ggez::GameError> for GameState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
+        self.player.update();
         Ok(())
     }
 
@@ -112,9 +131,6 @@ impl event::EventHandler<ggez::GameError> for GameState {
         x: f32,
         y: f32,
     ) {
-        let stretched_x = STRETCHED_RESOLUTION.0 * x;
-        let stretched_y = STRETCHED_RESOLUTION.0 * y;
-        println!("{}, {}", stretched_x, stretched_y);
     }
 
     fn key_down_event(
@@ -124,6 +140,8 @@ impl event::EventHandler<ggez::GameError> for GameState {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
+        self.player.direction.update_from_keycode(keycode);
+        println!("{:?}", self.player.direction);
     }
 }
 
