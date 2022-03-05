@@ -36,12 +36,12 @@ struct Position {
 
 impl Direction {
 
-    pub fn update_from_keycode(&mut self, key: KeyCode) {
+    pub fn update_from_keycode(&mut self, key: KeyCode, down: bool) {
         match key {
-            KeyCode::Up => self.Up = true,
-            KeyCode::Down => self.Down = true,
-            KeyCode::Left => self.Left = true,
-            KeyCode::Right => self.Right = true,
+            KeyCode::Up => self.Up = down,
+            KeyCode::Down => self.Down = down,
+            KeyCode::Left => self.Left = down,
+            KeyCode::Right => self.Right = down,
             _ => (),
         };
     }
@@ -140,8 +140,16 @@ impl event::EventHandler<ggez::GameError> for GameState {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
-        self.player.direction.update_from_keycode(keycode);
-        println!("{:?}", self.player.direction);
+        self.player.direction.update_from_keycode(keycode, true);
+    }
+
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: KeyCode,
+        _keymod: KeyMods,
+    ) {
+        self.player.direction.update_from_keycode(keycode, false);
     }
 }
 
