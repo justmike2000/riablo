@@ -8,8 +8,8 @@ use ggez::event::{KeyCode, KeyMods};
 use ggez::graphics::{GlBackendSpec, Image, draw, Rect,
                      ImageGeneric, clear, present};
 
-use std::path;
-use std::env;
+use std::{path, env};
+use std::time::{Duration, Instant};
 
 const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
 //const STRETCHED_RESOLUTION: (f32, f32) = ((BASE_RESOLUTION.0 / RESOLUTION.0),
@@ -48,12 +48,20 @@ impl Direction {
         };
     }
 }
+pub trait Sprite {
+    fn animate_frames(&mut self);
+}
 
 struct Player {
     resolution: (f32, f32),
     position: Position,
     direction: Direction,
     texture: ImageGeneric<GlBackendSpec>,
+    is_moving: bool,
+    animation_frame: f32,
+    animation_total_frames: f32,
+    last_animation: Option<std::time::Instant>,
+    animation_duration: std::time::Duration,
 }
 
 impl Player {
@@ -65,6 +73,11 @@ impl Player {
             texture: Image::new(ctx, 
             "/hero.png".to_string()).unwrap(),
             resolution,
+            is_moving: false,
+            animation_frame: 0.0,
+            animation_total_frames: 4.0,
+            last_animation: Some(std::time::Instant::now()),
+            animation_duration:  Duration::new(0, 150_000_000),
         }
     }
 
@@ -83,6 +96,17 @@ impl Player {
         }
         if self.direction.right {
             self.position.x += PLAYER_MOVEMENT.0;
+        }
+    }
+
+    fn animate_frames(&mut self) {
+        // Animation movement
+        if self.is_moving && self.last_animation.unwrap().elapsed() > self.animation_duration {
+            self.last_animation = Some(Instant::now());
+            self.animation_frame += 1.0 / self.animation_total_frames;
+            if self.animation_frame >= 1.0 {
+                self.animation_frame = 0.0;
+            }
         }
     }
 
