@@ -16,9 +16,12 @@ const RESOLUTION: (f32, f32) = (1920.0, 1080.0);
 const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
 //const STRETCHED_RESOLUTION: (f32, f32) = ((BASE_RESOLUTION.0 / RESOLUTION.0),
 //                                       (BASE_RESOLUTION.1 / RESOLUTION.1));
-const SCALED_RESOLUTION: (f32, f32) = ((RESOLUTION.0 / BASE_RESOLUTION.0),
-                                       (RESOLUTION.1 / BASE_RESOLUTION.1));
 const PLAYER_MOVEMENT: (f32, f32) = (5.00, 5.00);
+
+fn get_scaled_resolution() -> (f32, f32) {
+    ((RESOLUTION.0 / BASE_RESOLUTION.0).round(),
+    (RESOLUTION.1 / BASE_RESOLUTION.1).round())
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 struct Direction {
@@ -86,12 +89,12 @@ impl Player {
 
         let param = graphics::DrawParam::new()
         .src(graphics::Rect {x: 0.00, y: 0.00, w: 0.25, h: 0.25})
-        .dest(Vec2::new(self.position.x * SCALED_RESOLUTION.0, 
-                              self.position.y * SCALED_RESOLUTION.1))
+        .dest(Vec2::new(self.position.x * get_scaled_resolution().0, 
+                              self.position.y * get_scaled_resolution().1))
         .offset(Vec2::new(0.00, 0.00))
         // Scale image based on resolution
-        .scale(Vec2::new(RESOLUTION.0 / BASE_RESOLUTION.0,
-                                RESOLUTION.1 / BASE_RESOLUTION.1));
+        .scale(Vec2::new(get_scaled_resolution().0,
+                                get_scaled_resolution().1));
         draw(ctx, &self.texture, param)?;
         Ok(())
     }
@@ -117,7 +120,9 @@ impl event::EventHandler<ggez::GameError> for GameState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        clear(ctx, [0.0, 1.0, 0.0, 1.0].into());
+        // Clear background
+        clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
+        // Draw Player
         self.player.draw(ctx)?;
         present(ctx)?;
         ggez::timer::yield_now();
@@ -154,6 +159,8 @@ impl event::EventHandler<ggez::GameError> for GameState {
 }
 
 fn main() -> GameResult {
+
+     println!("{:?}", get_scaled_resolution().0);
 
     let window_setup = ggez::conf::WindowSetup::default().title("Riablo");
 
