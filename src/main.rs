@@ -64,6 +64,19 @@ struct Player {
     animation_duration: std::time::Duration,
 }
 
+impl Sprite for Player {
+    fn animate_frames(&mut self) {
+        // Animation movement
+        if self.is_moving && self.last_animation.unwrap().elapsed() > self.animation_duration {
+            self.last_animation = Some(Instant::now());
+            self.animation_frame += 1.0 / self.animation_total_frames;
+            if self.animation_frame >= 1.0 {
+                self.animation_frame = 0.0;
+            }
+        }
+    }
+}
+
 impl Player {
 
     fn new(ctx: &mut Context, resolution: (f32, f32)) -> Player {
@@ -99,19 +112,8 @@ impl Player {
         }
     }
 
-    fn animate_frames(&mut self) {
-        // Animation movement
-        if self.is_moving && self.last_animation.unwrap().elapsed() > self.animation_duration {
-            self.last_animation = Some(Instant::now());
-            self.animation_frame += 1.0 / self.animation_total_frames;
-            if self.animation_frame >= 1.0 {
-                self.animation_frame = 0.0;
-            }
-        }
-    }
-
-    fn draw(&self, ctx: &mut Context) -> GameResult<()> {
-
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        self.animate_frames();
         let param = graphics::DrawParam::new()
         .src(graphics::Rect {x: 0.00, y: 0.00, w: 0.25, h: 0.25})
         .dest(Vec2::new(self.position.x * get_scaled_resolution(self.resolution).0, 
