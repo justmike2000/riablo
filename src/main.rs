@@ -48,31 +48,63 @@ impl Direction {
         };
     }
 }
-pub trait Sprite {
-    fn animate_frames(&mut self);
-}
 
-struct Player {
-    resolution: (f32, f32),
-    position: Position,
-    direction: Direction,
-    texture: ImageGeneric<GlBackendSpec>,
-    is_moving: bool,
+struct AnimationFrames {
     animation_frame: f32,
     animation_total_frames: f32,
     last_animation: Option<std::time::Instant>,
     animation_duration: std::time::Duration,
 }
 
-impl Sprite for Player {
+impl AnimationFrames {
+    fn new(total_frames: f32, duration: Duration) -> AnimationFrames {
+        AnimationFrames {
+            animation_frame: 0.0,
+            animation_total_frames: total_frames,
+            last_animation: Some(std::time::Instant::now()),
+            animation_duration: duration,
+        }
+    }
+}
+
+struct Sprite {
+    texture: ImageGeneric<GlBackendSpec>,
+    frames: AnimationFrames,
+}
+
+trait Animate {
+    fn animate_frames(&mut self);
+}
+
+impl Animate for Player {
+
     fn animate_frames(&mut self) {
         // Animation movement
-        if self.is_moving && self.last_animation.unwrap().elapsed() > self.animation_duration {
-            self.last_animation = Some(Instant::now());
-            self.animation_frame += 1.0 / self.animation_total_frames;
-            if self.animation_frame >= 1.0 {
-                self.animation_frame = 0.0;
+        if self.sprite.frames.last_animation.unwrap().elapsed() > self.sprite.frames.animation_duration {
+            self.sprite.frames.last_animation = Some(Instant::now());
+            self.sprite.frames.animation_frame += 1.0 / self.sprite.frames.animation_total_frames;
+            if self.sprite.frames.animation_frame >= 1.0 {
+                self.sprite.frames.animation_frame = 0.0;
             }
+        }
+    }
+
+}
+
+struct Player {
+    resolution: (f32, f32),
+    position: Position,
+    direction: Direction,
+    is_moving: bool,
+    sprite: Sprite
+}
+
+impl Sprite {
+    
+    fn new(texture: Image, frames: AnimationFrames) -> Sprite {
+        Sprite {
+            texture,
+            frames,
         }
     }
 }
@@ -80,17 +112,15 @@ impl Sprite for Player {
 impl Player {
 
     fn new(ctx: &mut Context, resolution: (f32, f32)) -> Player {
+        let player_texutre = Image::new(ctx,
+                "/hero.png".to_string()).unwrap();
+        let frames = AnimationFrames::new(4.0, Duration::new(0, 150_000_000));
         Player {
             position: Position::default(),
             direction: Direction::default(),
-            texture: Image::new(ctx, 
-            "/hero.png".to_string()).unwrap(),
             resolution,
             is_moving: false,
-            animation_frame: 0.0,
-            animation_total_frames: 4.0,
-            last_animation: Some(std::time::Instant::now()),
-            animation_duration:  Duration::new(0, 150_000_000),
+            sprite: Sprite::new(player_texutre, frames),
         }
     }
 
@@ -122,7 +152,7 @@ impl Player {
         // Scale image based on resolution
         .scale(Vec2::new(get_scaled_resolution(self.resolution).0,
                                 get_scaled_resolution(self.resolution).1));
-        draw(ctx, &self.texture, param)?;
+        draw(ctx, &self.sprite.texture, param)?;
         Ok(())
     }
 }
@@ -186,6 +216,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
+        self.player.is_moving = true;
         self.player.direction.update_from_keycode(keycode, true);
     }
 
@@ -196,6 +227,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
         _keymod: KeyMods,
     ) {
         self.player.direction.update_from_keycode(keycode, false);
+        self.player.is_moving = false;
     }
 }
 
