@@ -143,9 +143,11 @@ impl Player {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.animate_frames();
+        if self.is_moving {
+            self.animate_frames();
+        }
         let param = graphics::DrawParam::new()
-        .src(graphics::Rect {x: 0.00, y: 0.00, w: 0.25, h: 0.25})
+        .src(graphics::Rect {x: self.sprite.frames.animation_frame, y: 0.00, w: 0.25, h: 0.25})
         .dest(Vec2::new(self.position.x * get_scaled_resolution(self.resolution).0, 
                               self.position.y * get_scaled_resolution(self.resolution).1))
         .offset(Vec2::new(0.00, 0.00))
