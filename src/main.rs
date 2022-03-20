@@ -49,7 +49,7 @@ impl Direction {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 struct AnimationFrames {
     animation_frame: f32,
     animation_total_frames: f32,
@@ -68,7 +68,7 @@ impl AnimationFrames {
 
 struct Sprite {
     texture: ImageGeneric<GlBackendSpec>,
-    frames: AnimationFrames,
+    frames: Option<AnimationFrames>,
 }
 
 trait Animate {
@@ -79,11 +79,16 @@ impl Animate for Player {
 
     fn animate_frames(&mut self) {
         // Animation movement
-        if self.sprite.frames.last_animation.unwrap().elapsed() >  Duration::new(0, 150_000_000) {
-            self.sprite.frames.last_animation = Some(Instant::now());
-            self.sprite.frames.animation_frame += 1.0 / self.sprite.frames.animation_total_frames;
-            if self.sprite.frames.animation_frame >= 1.0 {
-                self.sprite.frames.animation_frame = 0.0;
+        if let Some(mut frames) = self.sprite.frames {
+            if let Some(last_animation) = frames.last_animation {
+                if last_animation.elapsed() >  Duration::new(0, 150_000_000) {
+                    frames.last_animation = Some(Instant::now());
+                    frames.animation_frame += 1.0 / frames.animation_total_frames;
+                    if frames.animation_frame >= 1.0 {
+                        frames.animation_frame = 0.0;
+                    }
+                }
+                self.sprite.frames = Some(frames);
             }
         }
     }
@@ -106,7 +111,7 @@ impl Sprite {
         let frames = AnimationFrames::new(total_frames);
         Sprite {
             texture: new_texutre,
-            frames,
+            frames: Some(frames),
         }
     }
 }
@@ -145,8 +150,13 @@ impl Player {
         if self.is_moving {
             self.animate_frames();
         }
+        let frame_x = if let Some(frames) = self.sprite.frames {
+            frames.animation_frame
+        } else {
+            0.0
+        };
         let param = graphics::DrawParam::new()
-        .src(graphics::Rect {x: self.sprite.frames.animation_frame, y: 0.00, w: 0.25, h: 0.25})
+        .src(graphics::Rect {x: frame_x, y: 0.00, w: 0.25, h: 0.25})
         .dest(Vec2::new(self.position.x * get_scaled_resolution(self.resolution).0, 
                               self.position.y * get_scaled_resolution(self.resolution).1))
         .offset(Vec2::new(0.00, 0.00))
