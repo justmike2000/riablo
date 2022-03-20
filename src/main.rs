@@ -101,11 +101,11 @@ struct Player {
 impl Sprite {
     
     fn new(ctx: &mut Context, texture: &str, total_frames: f32) -> Sprite {
-        let player_texutre = Image::new(ctx,
+        let new_texutre = Image::new(ctx,
                 texture.to_string()).unwrap();
         let frames = AnimationFrames::new(total_frames);
         Sprite {
-            texture: player_texutre,
+            texture: new_texutre,
             frames,
         }
     }
