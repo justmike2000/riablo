@@ -54,16 +54,14 @@ struct AnimationFrames {
     animation_frame: f32,
     animation_total_frames: f32,
     last_animation: Option<std::time::Instant>,
-    animation_duration: std::time::Duration,
 }
 
 impl AnimationFrames {
-    fn new(total_frames: f32, duration: Duration) -> AnimationFrames {
+    fn new(total_frames: f32) -> AnimationFrames {
         AnimationFrames {
             animation_frame: 0.0,
             animation_total_frames: total_frames,
             last_animation: Some(std::time::Instant::now()),
-            animation_duration: duration,
         }
     }
 }
@@ -81,7 +79,7 @@ impl Animate for Player {
 
     fn animate_frames(&mut self) {
         // Animation movement
-        if self.sprite.frames.last_animation.unwrap().elapsed() > self.sprite.frames.animation_duration {
+        if self.sprite.frames.last_animation.unwrap().elapsed() >  Duration::new(0, 150_000_000) {
             self.sprite.frames.last_animation = Some(Instant::now());
             self.sprite.frames.animation_frame += 1.0 / self.sprite.frames.animation_total_frames;
             if self.sprite.frames.animation_frame >= 1.0 {
@@ -102,9 +100,10 @@ struct Player {
 
 impl Sprite {
     
-    fn new(ctx: &mut Context, texture: &str, frames: AnimationFrames) -> Sprite {
+    fn new(ctx: &mut Context, texture: &str, total_frames: f32) -> Sprite {
         let player_texutre = Image::new(ctx,
                 texture.to_string()).unwrap();
+        let frames = AnimationFrames::new(total_frames);
         Sprite {
             texture: player_texutre,
             frames,
@@ -115,13 +114,12 @@ impl Sprite {
 impl Player {
 
     fn new(ctx: &mut Context, resolution: (f32, f32)) -> Player {
-        let frames = AnimationFrames::new(4.0, Duration::new(0, 150_000_000));
         Player {
             position: Position::default(),
             direction: Direction::default(),
             resolution,
             is_moving: false,
-            sprite: Sprite::new(ctx, "/hero.png", frames),
+            sprite: Sprite::new(ctx, "/hero.png", 4.0),
         }
     }
 
