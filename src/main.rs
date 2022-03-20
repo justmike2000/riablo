@@ -49,6 +49,7 @@ impl Direction {
     }
 }
 
+#[derive(Default)]
 struct AnimationFrames {
     animation_frame: f32,
     animation_total_frames: f32,
