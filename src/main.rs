@@ -102,9 +102,11 @@ struct Player {
 
 impl Sprite {
     
-    fn new(texture: Image, frames: AnimationFrames) -> Sprite {
+    fn new(ctx: &mut Context, texture: &str, frames: AnimationFrames) -> Sprite {
+        let player_texutre = Image::new(ctx,
+                texture.to_string()).unwrap();
         Sprite {
-            texture,
+            texture: player_texutre,
             frames,
         }
     }
@@ -113,15 +115,13 @@ impl Sprite {
 impl Player {
 
     fn new(ctx: &mut Context, resolution: (f32, f32)) -> Player {
-        let player_texutre = Image::new(ctx,
-                "/hero.png".to_string()).unwrap();
         let frames = AnimationFrames::new(4.0, Duration::new(0, 150_000_000));
         Player {
             position: Position::default(),
             direction: Direction::default(),
             resolution,
             is_moving: false,
-            sprite: Sprite::new(player_texutre, frames),
+            sprite: Sprite::new(ctx, "/hero.png", frames),
         }
     }
 
