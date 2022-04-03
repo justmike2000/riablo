@@ -101,8 +101,6 @@ impl Animate for Player {
             0.5
         } else if self.direction.right {
             0.75
-        } else if self.direction.down {
-            0.0
         } else {
             0.0
         }
@@ -121,7 +119,7 @@ impl Sprite {
     
     fn new(ctx: &mut Context, texture: &str, total_frames: f32) -> Sprite {
         let new_texutre = Image::new(ctx,
-                texture.to_string()).unwrap();
+                texture).unwrap();
         let frames = AnimationFrames::new(total_frames);
         Sprite {
             texture: new_texutre,
