@@ -73,6 +73,7 @@ struct Sprite {
 
 trait Animate {
     fn animate_frames(&mut self);
+    fn get_animation_direction(&self) -> f32;
 }
 
 impl Animate for Player {
@@ -93,6 +94,19 @@ impl Animate for Player {
         }
     }
 
+    fn get_animation_direction(&self) -> f32 {
+        if self.direction.up {
+            0.25
+        } else if self.direction.left {
+            0.5
+        } else if self.direction.right {
+            0.75
+        } else if self.direction.down {
+            0.0
+        } else {
+            0.0
+        }
+    }
 }
 
 struct Player {
@@ -155,8 +169,9 @@ impl Player {
         } else {
             0.0
         };
+        let frame_y = self.get_animation_direction();
         let param = graphics::DrawParam::new()
-        .src(graphics::Rect {x: frame_x, y: 0.00, w: 0.25, h: 0.25})
+        .src(graphics::Rect {x: frame_x, y: frame_y, w: 0.25, h: 0.25})
         .dest(Vec2::new(self.position.x * get_scaled_resolution(self.resolution).0, 
                               self.position.y * get_scaled_resolution(self.resolution).1))
         .offset(Vec2::new(0.00, 0.00))
