@@ -1,10 +1,11 @@
 
 //use oorandom::Rand32;
 
+use ggez::input::mouse::position;
 use glam::*;
 use ggez::{event, Context, GameResult, graphics};
 //use ggez::input::mouse::MouseButton;
-use ggez::event::{KeyCode, KeyMods};
+use ggez::event::{KeyCode, KeyMods, MouseButton};
 use ggez::graphics::{GlBackendSpec, Image, draw, Rect,
                      ImageGeneric, clear, present};
 
@@ -16,6 +17,7 @@ const BASE_RESOLUTION: (f32, f32) = (800.0, 600.0);
 //                                       (BASE_RESOLUTION.1 / RESOLUTION.1));
 const PLAYER_MOVEMENT: (f32, f32) = (5.00, 5.00);
 
+const GRID_SIZE: f32 = 50.0;
 
 fn get_scaled_resolution(coords: (f32, f32)) -> (f32, f32) {
     ((coords.0 / BASE_RESOLUTION.0).round(),
@@ -29,11 +31,35 @@ struct Direction {
     left: bool,
     right: bool,
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+struct Grid {
+    x: u8,
+    y: u8,
+}
 
-#[derive(Default)]
+impl Grid {
+    fn from_position(position: Position) -> Grid {
+        Grid {
+            x: (position.x / GRID_SIZE) as u8,
+            y: (position.y / GRID_SIZE) as u8
+        }
+    }
+}
+
+#[derive(Debug, Default, PartialEq)]
 struct Position {
     x: f32,
     y: f32,
+}
+
+impl From<Grid> for Position {
+    fn from(grid: Grid) -> Self {
+        Position {
+            x: GRID_SIZE * grid.x as f32,
+            y: GRID_SIZE * grid.y as f32,
+        }
+    }
+
 }
 
 impl Direction {
@@ -109,7 +135,9 @@ impl Animate for Player {
 
 struct Player {
     resolution: (f32, f32),
-    position: Position,
+    draw_position: Position,
+    grid_position: Grid,
+    grid_destination: Grid,
     direction: Direction,
     is_moving: bool,
     sprite: Sprite
@@ -132,7 +160,9 @@ impl Player {
 
     fn new(ctx: &mut Context, resolution: (f32, f32)) -> Player {
         Player {
-            position: Position::default(),
+            draw_position: Position::default(),
+            grid_position: Grid::default(),
+            grid_destination: Grid::default(),
             direction: Direction::default(),
             resolution,
             is_moving: false,
@@ -141,21 +171,18 @@ impl Player {
     }
 
     fn update(&mut self) {
-        if self.direction.up {
-            self.position.y -= PLAYER_MOVEMENT.1;
+        //println!("{} {}", self.draw_position.x, self.destination.x);
+        //if self.draw_position.x != self.destination.x {
+        //    self.is_moving = true;
+        //    self.draw_position.x += 1.00;
+        //} else {
+        //    self.is_moving = false;
+        //}
+    }
 
-        }
-        if self.direction.down {
-            self.position.y += PLAYER_MOVEMENT.1;
-
-        }
-        if self.direction.left {
-            self.position.x -= PLAYER_MOVEMENT.0;
-
-        }
-        if self.direction.right {
-            self.position.x += PLAYER_MOVEMENT.0;
-        }
+    fn move_to_posiiton(&mut self, x: f32, y: f32) {
+        //self.destination.x = x;
+        //self.destination.y = y;
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
@@ -170,8 +197,8 @@ impl Player {
         let frame_y = self.get_animation_direction();
         let param = graphics::DrawParam::new()
         .src(graphics::Rect {x: frame_x, y: frame_y, w: 0.25, h: 0.25})
-        .dest(Vec2::new(self.position.x * get_scaled_resolution(self.resolution).0, 
-                              self.position.y * get_scaled_resolution(self.resolution).1))
+        .dest(Vec2::new(self.draw_position.x * get_scaled_resolution(self.resolution).0, 
+                              self.draw_position.y * get_scaled_resolution(self.resolution).1))
         .offset(Vec2::new(0.00, 0.00))
         // Scale image based on resolution
         .scale(Vec2::new(get_scaled_resolution(self.resolution).0,
@@ -224,14 +251,22 @@ impl event::EventHandler<ggez::GameError> for GameState {
         Ok(())
     }
 
-    //fn mouse_button_down_event(
-    //    &mut self,
-    //    _ctx: &mut Context,
-    //    button: MouseButton,
-    //    x: f32,
-    //    y: f32,
-    //) {
-    //}
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        let scale_x = BASE_RESOLUTION.0 / self.resolution.0;
+        let scale_y = BASE_RESOLUTION.1 / self.resolution.1;
+        let mouse_pos = Position {
+            x: x * scale_x,
+            y: y * scale_y
+        };
+        let grid_pos: Grid = Grid::from_position(mouse_pos);
+        println!("Grid Clicked: {:?}", grid_pos);
+    }
 
     fn key_down_event(
         &mut self,
@@ -240,8 +275,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
-        self.player.is_moving = true;
-        self.player.direction.update_from_keycode(keycode, true);
+        //self.player.direction.update_from_keycode(keycode, true);
     }
 
     fn key_up_event(
@@ -250,8 +284,11 @@ impl event::EventHandler<ggez::GameError> for GameState {
         keycode: KeyCode,
         _keymod: KeyMods,
     ) {
-        self.player.direction.update_from_keycode(keycode, false);
-        self.player.is_moving = false;
+        //self.player.direction.update_from_keycode(keycode, false);
+        if keycode == KeyCode::G {
+            //println!("G");
+            self.player.move_to_posiiton(100.00, 100.00);
+        }
     }
 }
 
