@@ -46,7 +46,7 @@ impl Grid {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 struct Position {
     x: f32,
     y: f32,
@@ -171,13 +171,15 @@ impl Player {
     }
 
     fn update(&mut self) {
-        //println!("{} {}", self.draw_position.x, self.destination.x);
-        //if self.draw_position.x != self.destination.x {
-        //    self.is_moving = true;
-        //    self.draw_position.x += 1.00;
-        //} else {
-        //    self.is_moving = false;
-        //}
+        println!("{:?} {:?}", self.grid_position, self.grid_destination);
+        if self.grid_position != self.grid_destination {
+            self.is_moving = true;
+            self.draw_position.x += 1.00;
+            self.draw_position.y += 1.00;
+            self.grid_position = Grid::from_position(self.draw_position);
+        } else {
+            self.is_moving = false;
+        }
     }
 
     fn move_to_posiiton(&mut self, x: f32, y: f32) {
@@ -265,6 +267,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
             y: y * scale_y
         };
         let grid_pos: Grid = Grid::from_position(mouse_pos);
+        self.player.grid_destination = grid_pos;
         println!("Grid Clicked: {:?}", grid_pos);
     }
 
