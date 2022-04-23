@@ -6,8 +6,8 @@ use glam::*;
 use ggez::{event, Context, GameResult, graphics};
 //use ggez::input::mouse::MouseButton;
 use ggez::event::{KeyCode, KeyMods, MouseButton};
-use ggez::graphics::{GlBackendSpec, Image, draw, Rect,
-                     ImageGeneric, clear, present};
+use ggez::graphics::{GlBackendSpec, Image, draw, Rect, DrawMode,
+                     ImageGeneric, clear, MeshBuilder, present};
 
 use std::{path, env};
 use std::time::{Duration, Instant};
@@ -31,6 +31,7 @@ struct Direction {
     left: bool,
     right: bool,
 }
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 struct Grid {
     x: u8,
@@ -171,11 +172,10 @@ impl Player {
     }
 
     fn update(&mut self) {
-        println!("{:?} {:?}", self.grid_position, self.grid_destination);
-        if self.grid_position != self.grid_destination {
+        //println!("{:?} {:?}", self.grid_position, self.grid_destination);
+        if self.grid_position.x != self.grid_destination.x {
             self.is_moving = true;
-            self.draw_position.x += 1.00;
-            self.draw_position.y += 1.00;
+            self.draw_position.x += 1.0;
             self.grid_position = Grid::from_position(self.draw_position);
         } else {
             self.is_moving = false;
@@ -213,6 +213,10 @@ impl Player {
 struct GameState {
     player: Player,
     resolution: (f32, f32),
+    mouse_x: f32,
+    mouse_y: f32,
+    mouse_dx: f32,
+    mouse_dy: f32,
 }
 
 impl GameState {
@@ -220,7 +224,12 @@ impl GameState {
 
         GameState {
             player: Player::new(ctx, resolution),
-            resolution
+            resolution,
+            mouse_x: 0.0,
+            mouse_y: 0.0,
+            mouse_dx: 0.0,
+            mouse_dy: 0.0,
+            
         }
     }
 }
@@ -232,6 +241,10 @@ impl event::EventHandler<ggez::GameError> for GameState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+
+        // Get scale
+        let scaled_resolution = get_scaled_resolution(self.resolution);
+
         // Clear background
         clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
@@ -240,12 +253,49 @@ impl event::EventHandler<ggez::GameError> for GameState {
             graphics::DrawMode::fill(),
             Rect::new(0.0,
                 0.0, 
-                BASE_RESOLUTION.0 * get_scaled_resolution(self.resolution).0, 
-                BASE_RESOLUTION.1 * get_scaled_resolution(self.resolution).1),
+                BASE_RESOLUTION.0 * scaled_resolution.0, 
+                BASE_RESOLUTION.1 * scaled_resolution.1),
             [0.0, 1.0, 0.0, 1.0].into(),
         )?;
         graphics::draw(ctx, &green_rectangle, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
 
+        // Draw where mouse outline is
+        let grid_outline = graphics::Mesh::new_rectangle(
+            ctx,
+            graphics::DrawMode::fill(),
+            Rect::new(0.0,
+                0.0, 
+                GRID_SIZE * scaled_resolution.0,
+                GRID_SIZE * scaled_resolution.1),
+            [1.0, 0.0, 0.0, 1.0].into(),
+        )?;
+        let mouse_pos = Position { x: self.mouse_x / scaled_resolution.0,
+            y: self.mouse_y / scaled_resolution.1};
+        let mut mouse_grid = Grid::from_position(mouse_pos);
+        mouse_grid.x = mouse_grid.x * scaled_resolution.0 as u8;
+        mouse_grid.y = mouse_grid.y * scaled_resolution.1 as u8;
+        let into_pos: Position = mouse_grid.into();
+        graphics::draw(ctx, &grid_outline, (ggez::mint::Point2 { x: into_pos.x, y: into_pos.y },))?;
+
+        // Draw Grid
+        for i in 1..16 {
+            let line = MeshBuilder::new()
+            .line(&[glam::vec2(i as f32 * (GRID_SIZE * scaled_resolution.0), 0.0),
+                           glam::vec2(i as f32 * (GRID_SIZE * scaled_resolution.0), self.resolution.0)],
+                  1.0, (0, 0, 0).into())?
+            //.circle(DrawMode::fill(), glam::vec2(60.0, 38.0), 40.0, 1.0, (0, 255, 0).into())?
+            .build(ctx)?;
+            graphics::draw(ctx, &line, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
+        }
+        // Draw Grid
+        for i in 1..12 {
+            let line = MeshBuilder::new()
+            .line(&[glam::vec2(0.0, i as f32 * GRID_SIZE * scaled_resolution.0),
+                           glam::vec2(self.resolution.0, i as f32 * GRID_SIZE * scaled_resolution.0)],
+                  1.0, (0, 0, 0).into())?
+            .build(ctx)?;
+            graphics::draw(ctx, &line, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
+        }
         // Draw Player
         self.player.draw(ctx)?;
         present(ctx)?;
@@ -253,6 +303,13 @@ impl event::EventHandler<ggez::GameError> for GameState {
         Ok(())
     }
 
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) {
+        self.mouse_x = x;
+        self.mouse_y = y;
+        self.mouse_dx = dy;
+        self.mouse_dy = dy;
+    }
+    
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut Context,
