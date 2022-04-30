@@ -203,8 +203,8 @@ impl Player {
                               self.draw_position.y * get_scaled_resolution(self.resolution).1))
         .offset(Vec2::new(0.00, 0.00))
         // Scale image based on resolution
-        .scale(Vec2::new(get_scaled_resolution(self.resolution).0,
-                                get_scaled_resolution(self.resolution).1));
+        .scale(Vec2::new(get_scaled_resolution(self.resolution).0 / 2.0,
+                                get_scaled_resolution(self.resolution).1 / 2.0));
         draw(ctx, &self.sprite.texture, param)?;
         Ok(())
     }
