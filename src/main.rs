@@ -248,18 +248,19 @@ impl event::EventHandler<ggez::GameError> for GameState {
         // Clear background
         clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
-        let green_rectangle = graphics::Mesh::new_rectangle(
+        let background_rectangle = graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),
             Rect::new(0.0,
                 0.0, 
                 BASE_RESOLUTION.0 * scaled_resolution.0, 
                 BASE_RESOLUTION.1 * scaled_resolution.1),
-            [0.0, 1.0, 0.0, 1.0].into(),
+            [0.1, 0.1, 0.1, 1.0].into(),
         )?;
-        graphics::draw(ctx, &green_rectangle, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
+        graphics::draw(ctx, &background_rectangle, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
 
         // Draw where mouse outline is
+        let outline_color = [0.2, 0.2, 1.0, 1.0];
         let grid_outline = graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),
@@ -267,7 +268,7 @@ impl event::EventHandler<ggez::GameError> for GameState {
                 0.0, 
                 GRID_SIZE * scaled_resolution.0,
                 GRID_SIZE * scaled_resolution.1),
-            [1.0, 0.0, 0.0, 1.0].into(),
+            outline_color.into(),
         )?;
         let mouse_pos = Position { x: self.mouse_x / scaled_resolution.0,
             y: self.mouse_y / scaled_resolution.1};
@@ -277,22 +278,23 @@ impl event::EventHandler<ggez::GameError> for GameState {
         let into_pos: Position = mouse_grid.into();
         graphics::draw(ctx, &grid_outline, (ggez::mint::Point2 { x: into_pos.x, y: into_pos.y },))?;
 
-        // Draw Grid
+        // Draw Grid Vertical
+        let grid_color = (200, 200, 0);
         for i in 1..16 {
             let line = MeshBuilder::new()
             .line(&[glam::vec2(i as f32 * (GRID_SIZE * scaled_resolution.0), 0.0),
                            glam::vec2(i as f32 * (GRID_SIZE * scaled_resolution.0), self.resolution.0)],
-                  1.0, (0, 0, 0).into())?
+                  1.0, grid_color.into())?
             //.circle(DrawMode::fill(), glam::vec2(60.0, 38.0), 40.0, 1.0, (0, 255, 0).into())?
             .build(ctx)?;
             graphics::draw(ctx, &line, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
         }
-        // Draw Grid
+        // Draw Grid Horizontal
         for i in 1..12 {
             let line = MeshBuilder::new()
             .line(&[glam::vec2(0.0, i as f32 * GRID_SIZE * scaled_resolution.0),
-                           glam::vec2(self.resolution.0, i as f32 * GRID_SIZE * scaled_resolution.0)],
-                  1.0, (0, 0, 0).into())?
+                           glam::vec2(BASE_RESOLUTION.0 * scaled_resolution.0, i as f32 * GRID_SIZE * scaled_resolution.0)],
+                  1.0, grid_color.into())?
             .build(ctx)?;
             graphics::draw(ctx, &line, (ggez::mint::Point2 { x: 0.0, y: 0.0 },))?;
         }
